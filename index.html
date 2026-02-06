@@ -107,8 +107,8 @@
   </style>
 </head>
 <body>
-  <!-- Audio element -->
-  <audio id="backgroundMusic" loop>
+  <!-- Audio element with autoplay -->
+  <audio id="backgroundMusic" loop autoplay>
     <source src="your-song.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
@@ -116,7 +116,7 @@
   <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
   <main class="card">
-    <img class="photo" id="photo" src="valentine-photo.jpg" alt="A special photo together" />
+    <img class="photo" id="photo" src="100_0401.jpeg" alt="A special photo together" />
 
     <h1 id="heading">Olivia, will you be my valentine? 💖</h1>
     <p id="subtext">You definitely shouldn't try to press no.</p>
@@ -181,9 +181,9 @@
         noOffsetY += ny * strength;
         clampOffset();
         
-        // Grow yes button and shrink no button
+        // Grow yes button and shrink no button (minimum 50%)
         yesScale += 0.05;
-        noScale = Math.max(0.3, noScale - 0.03);
+        noScale = Math.max(0.5, noScale - 0.03);
         
         applyNoOffset();
         applyYesScale();
@@ -195,9 +195,9 @@
       noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 8;
       clampOffset();
       
-      // Grow yes button and shrink no button
+      // Grow yes button and shrink no button (minimum 50%)
       yesScale += 0.1;
-      noScale = Math.max(0.3, noScale - 0.05);
+      noScale = Math.max(0.5, noScale - 0.05);
       
       applyNoOffset();
       applyYesScale();
@@ -206,7 +206,7 @@
     noBtn.addEventListener('click', () => {
       noClicks += 1;
       yesScale += 0.2;
-      noScale = Math.max(0.3, noScale - 0.08);
+      noScale = Math.max(0.5, noScale - 0.08);
       applyYesScale();
       applyNoOffset();
       message.textContent = [
@@ -222,60 +222,6 @@
     function sizeConfettiCanvas() {
       confettiCanvas.width = window.innerWidth;
       confettiCanvas.height = window.innerHeight;
-    }
-
-    function playCheerSound() {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-
-      const ctx = new AudioContextClass();
-      const now = ctx.currentTime;
-
-      const crowd = ctx.createBufferSource();
-      const duration = 2.2;
-      const sampleRate = ctx.sampleRate;
-      const buffer = ctx.createBuffer(1, sampleRate * duration, sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let i = 0; i < data.length; i += 1) {
-        const t = i / sampleRate;
-        const fade = Math.exp(-1.7 * t);
-        data[i] = (Math.random() * 2 - 1) * 0.22 * fade;
-      }
-      crowd.buffer = buffer;
-
-      const crowdFilter = ctx.createBiquadFilter();
-      crowdFilter.type = 'bandpass';
-      crowdFilter.frequency.setValueAtTime(950, now);
-      crowdFilter.Q.value = 0.6;
-
-      const crowdGain = ctx.createGain();
-      crowdGain.gain.setValueAtTime(0.0001, now);
-      crowdGain.gain.exponentialRampToValueAtTime(0.22, now + 0.08);
-      crowdGain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-      crowd.connect(crowdFilter);
-      crowdFilter.connect(crowdGain);
-      crowdGain.connect(ctx.destination);
-      crowd.start(now);
-      crowd.stop(now + duration);
-
-      const notes = [784, 988, 1175, 1319];
-      notes.forEach((freq, idx) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        const start = now + idx * 0.11;
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0.0001, start);
-        gain.gain.exponentialRampToValueAtTime(0.08, start + 0.03);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.24);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(start);
-        osc.stop(start + 0.26);
-      });
-
-      setTimeout(() => { ctx.close(); }, 2500);
     }
 
     function launchConfetti(durationMs = 2500) {
@@ -342,32 +288,30 @@
       yesBtn.textContent = 'YAYYYYYY';
       yesBtn.style.transform = 'scale(1.3)';
       launchConfetti(2600);
-      playCheerSound();
     });
 
     document.addEventListener('mousemove', dodgeCursor);
 
-    // Auto-play background music with fallback
+    // Auto-play background music on page load
     const bgMusic = document.getElementById('backgroundMusic');
     
+    // For private sites, we can be more aggressive with autoplay
     // Try to play immediately
-    const playPromise = bgMusic.play();
-    
-    if (playPromise !== undefined) {
-      playPromise.catch(error => {
-        // Auto-play was prevented, play on first user interaction
-        console.log('Auto-play prevented. Waiting for user interaction...');
-        
-        const playOnInteraction = () => {
-          bgMusic.play();
-          document.removeEventListener('click', playOnInteraction);
-          document.removeEventListener('touchstart', playOnInteraction);
-        };
-        
-        document.addEventListener('click', playOnInteraction);
-        document.addEventListener('touchstart', playOnInteraction);
-      });
-    }
+    bgMusic.play().catch(error => {
+      // If autoplay fails, play on first interaction
+      console.log('Autoplay prevented. Will play on first interaction.');
+      
+      const playOnInteraction = () => {
+        bgMusic.play();
+        document.removeEventListener('click', playOnInteraction);
+        document.removeEventListener('touchstart', playOnInteraction);
+        document.removeEventListener('keydown', playOnInteraction);
+      };
+      
+      document.addEventListener('click', playOnInteraction);
+      document.addEventListener('touchstart', playOnInteraction);
+      document.addEventListener('keydown', playOnInteraction);
+    });
   </script>
 </body>
 </html>
