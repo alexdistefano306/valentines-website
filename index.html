@@ -106,10 +106,16 @@
   </style>
 </head>
 <body>
+  <!-- Audio element -->
+  <audio id="backgroundMusic" loop>
+    <source src="your-song.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
   <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
   <main class="card">
-    <img class="photo" src="valentine-photo.jpg" alt="A special photo together" />
+    <img class="photo" src="100_0401.jpeg" alt="A special photo together" />
 
     <h1>Olivia, will you be my valentine? 💖</h1>
     <p>You definitely shouldn't try to press no.</p>
@@ -312,6 +318,28 @@
     });
 
     document.addEventListener('mousemove', dodgeCursor);
+
+    // Auto-play background music with fallback
+    const bgMusic = document.getElementById('backgroundMusic');
+    
+    // Try to play immediately
+    const playPromise = bgMusic.play();
+    
+    if (playPromise !== undefined) {
+      playPromise.catch(error => {
+        // Auto-play was prevented, play on first user interaction
+        console.log('Auto-play prevented. Waiting for user interaction...');
+        
+        const playOnInteraction = () => {
+          bgMusic.play();
+          document.removeEventListener('click', playOnInteraction);
+          document.removeEventListener('touchstart', playOnInteraction);
+        };
+        
+        document.addEventListener('click', playOnInteraction);
+        document.addEventListener('touchstart', playOnInteraction);
+      });
+    }
   </script>
 </body>
 </html>
