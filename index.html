@@ -18,6 +18,23 @@
       overflow: hidden;
     }
 
+    .intro-screen {
+      text-align: center;
+      color: #d6336c;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      font-weight: 700;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .intro-screen.hidden {
+      display: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
     .card {
       text-align: center;
       background: rgba(255, 255, 255, 0.95);
@@ -28,13 +45,17 @@
       position: relative;
     }
 
+    .card.hidden {
+      display: none;
+    }
+
     .photo {
-      width: min(100%, 420px);
-      max-height: 320px;
+      width: min(100%, 500px);
+      max-height: 400px;
       object-fit: cover;
       border-radius: 0.9rem;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-      margin-bottom: 1rem;
+      margin: 0 auto 1rem auto;
       display: none;
     }
 
@@ -55,6 +76,7 @@
       align-items: center;
       gap: 1rem;
       min-height: 90px;
+      position: relative;
     }
 
     button {
@@ -64,7 +86,7 @@
       font-size: 1rem;
       font-weight: 700;
       padding: 0.8rem 1.6rem;
-      transition: transform 0.15s ease, box-shadow 0.2s ease;
+      transition: box-shadow 0.2s ease;
       will-change: transform;
     }
 
@@ -78,6 +100,7 @@
       background: #f2f2f2;
       color: #444;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      position: absolute;
     }
 
     .message {
@@ -107,15 +130,20 @@
   </style>
 </head>
 <body>
-  <!-- Audio element with autoplay -->
-  <audio id="backgroundMusic" loop autoplay>
+  <!-- Intro screen -->
+  <div class="intro-screen" id="introScreen">
+    Press SPACE BAR to continue ✨
+  </div>
+
+  <!-- Audio element -->
+  <audio id="backgroundMusic" loop>
     <source src="your-song.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
 
   <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
-  <main class="card">
+  <main class="card hidden" id="mainCard">
     <img class="photo" id="photo" src="100_0401.jpeg" alt="A special photo together" />
 
     <h1 id="heading">Olivia, will you be my valentine? 💖</h1>
@@ -141,12 +169,30 @@
     const photo = document.getElementById('photo');
     const heading = document.getElementById('heading');
     const subtext = document.getElementById('subtext');
+    const introScreen = document.getElementById('introScreen');
+    const mainCard = document.getElementById('mainCard');
+    const bgMusic = document.getElementById('backgroundMusic');
 
     let noClicks = 0;
     let yesScale = 1;
     let noScale = 1;
     let noOffsetX = 0;
     let noOffsetY = 0;
+    let hasStarted = false;
+
+    // Listen for spacebar press to start
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !hasStarted) {
+        hasStarted = true;
+        introScreen.classList.add('hidden');
+        mainCard.classList.remove('hidden');
+        
+        // Start the music
+        bgMusic.play().catch(error => {
+          console.log('Could not play music:', error);
+        });
+      }
+    });
 
     function applyNoOffset() {
       noBtn.style.transform = `translate(${noOffsetX}px, ${noOffsetY}px) scale(${noScale})`;
@@ -166,6 +212,8 @@
     }
 
     function dodgeCursor(event) {
+      if (!hasStarted) return;
+      
       const rect = noBtn.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
@@ -173,16 +221,16 @@
       const dy = centerY - event.clientY;
       const distance = Math.hypot(dx, dy);
 
-      if (distance < 95) {
-        const strength = 14;
+      if (distance < 120) {
+        const strength = 18;
         const nx = dx / (distance || 1);
         const ny = dy / (distance || 1);
         noOffsetX += nx * strength;
         noOffsetY += ny * strength;
         clampOffset();
         
-        // Grow yes button and shrink no button (minimum 50%)
-        yesScale += 0.05;
+        // Grow yes button (max 300%) and shrink no button (minimum 50%)
+        yesScale = Math.min(3, yesScale + 0.05);
         noScale = Math.max(0.5, noScale - 0.03);
         
         applyNoOffset();
@@ -191,21 +239,30 @@
     }
 
     noBtn.addEventListener('mouseenter', () => {
-      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 12;
-      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 8;
+      const randomX = (Math.random() > 0.5 ? 1 : -1) * 20;
+      const randomY = (Math.random() > 0.5 ? 1 : -1) * 15;
+      noOffsetX += randomX;
+      noOffsetY += randomY;
       clampOffset();
       
-      // Grow yes button and shrink no button (minimum 50%)
-      yesScale += 0.1;
+      // Grow yes button (max 300%) and shrink no button (minimum 50%)
+      yesScale = Math.min(3, yesScale + 0.1);
       noScale = Math.max(0.5, noScale - 0.05);
       
       applyNoOffset();
       applyYesScale();
     });
 
-    noBtn.addEventListener('click', () => {
+    noBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       noClicks += 1;
-      yesScale += 0.2;
+      
+      // Jump away immediately on click
+      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 40;
+      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 30;
+      clampOffset();
+      
+      yesScale = Math.min(3, yesScale + 0.2);
       noScale = Math.max(0.5, noScale - 0.08);
       applyYesScale();
       applyNoOffset();
@@ -283,7 +340,7 @@
       photo.style.display = 'block';
       
       message.textContent = 'YAY! Best Valentine ever! 💞';
-      submessage.textContent = 'I love you so much my baby, booger, boogs, sweetheart, honey, and most importantly, my second half.';
+      submessage.textContent = 'I love you so much my baby, booger, boogs, sweetheart, honey, and most importantly, my second half! ❤️';
       noBtn.style.display = 'none';
       yesBtn.textContent = 'YAYYYYYY';
       yesBtn.style.transform = 'scale(1.3)';
@@ -291,27 +348,6 @@
     });
 
     document.addEventListener('mousemove', dodgeCursor);
-
-    // Auto-play background music on page load
-    const bgMusic = document.getElementById('backgroundMusic');
-    
-    // For private sites, we can be more aggressive with autoplay
-    // Try to play immediately
-    bgMusic.play().catch(error => {
-      // If autoplay fails, play on first interaction
-      console.log('Autoplay prevented. Will play on first interaction.');
-      
-      const playOnInteraction = () => {
-        bgMusic.play();
-        document.removeEventListener('click', playOnInteraction);
-        document.removeEventListener('touchstart', playOnInteraction);
-        document.removeEventListener('keydown', playOnInteraction);
-      };
-      
-      document.addEventListener('click', playOnInteraction);
-      document.addEventListener('touchstart', playOnInteraction);
-      document.addEventListener('keydown', playOnInteraction);
-    });
   </script>
 </body>
 </html>
