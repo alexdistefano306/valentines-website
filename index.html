@@ -35,6 +35,7 @@
       border-radius: 0.9rem;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
       margin-bottom: 1rem;
+      display: none;
     }
 
     h1 {
@@ -115,10 +116,10 @@
   <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
   <main class="card">
-    <img class="photo" src="100_0401.jpeg" alt="A special photo together" />
+    <img class="photo" id="photo" src="valentine-photo.jpg" alt="A special photo together" />
 
-    <h1>Olivia, will you be my valentine? 💖</h1>
-    <p>You definitely shouldn't try to press no.</p>
+    <h1 id="heading">Olivia, will you be my valentine? 💖</h1>
+    <p id="subtext">You definitely shouldn't try to press no.</p>
 
     <div class="buttons" id="buttonArea">
       <button id="yesBtn">Yes 💘</button>
@@ -137,14 +138,22 @@
     const submessage = document.getElementById('submessage');
     const confettiCanvas = document.getElementById('confettiCanvas');
     const confettiCtx = confettiCanvas.getContext('2d');
+    const photo = document.getElementById('photo');
+    const heading = document.getElementById('heading');
+    const subtext = document.getElementById('subtext');
 
     let noClicks = 0;
     let yesScale = 1;
+    let noScale = 1;
     let noOffsetX = 0;
     let noOffsetY = 0;
 
     function applyNoOffset() {
-      noBtn.style.transform = `translate(${noOffsetX}px, ${noOffsetY}px)`;
+      noBtn.style.transform = `translate(${noOffsetX}px, ${noOffsetY}px) scale(${noScale})`;
+    }
+
+    function applyYesScale() {
+      yesBtn.style.transform = `scale(${yesScale})`;
     }
 
     function clampOffset() {
@@ -171,7 +180,13 @@
         noOffsetX += nx * strength;
         noOffsetY += ny * strength;
         clampOffset();
+        
+        // Grow yes button and shrink no button
+        yesScale += 0.05;
+        noScale = Math.max(0.3, noScale - 0.03);
+        
         applyNoOffset();
+        applyYesScale();
       }
     }
 
@@ -179,13 +194,21 @@
       noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 12;
       noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 8;
       clampOffset();
+      
+      // Grow yes button and shrink no button
+      yesScale += 0.1;
+      noScale = Math.max(0.3, noScale - 0.05);
+      
       applyNoOffset();
+      applyYesScale();
     });
 
     noBtn.addEventListener('click', () => {
       noClicks += 1;
       yesScale += 0.2;
-      yesBtn.style.transform = `scale(${yesScale})`;
+      noScale = Math.max(0.3, noScale - 0.08);
+      applyYesScale();
+      applyNoOffset();
       message.textContent = [
         'Are you suuure? 😅',
         "Come on, it'll be fun! 🥺",
@@ -308,6 +331,11 @@
     window.addEventListener('resize', sizeConfettiCanvas);
 
     yesBtn.addEventListener('click', () => {
+      // Hide text and show photo
+      heading.style.display = 'none';
+      subtext.style.display = 'none';
+      photo.style.display = 'block';
+      
       message.textContent = 'YAY! Best Valentine ever! 💞';
       submessage.textContent = 'I love you so much my baby, booger, boogs, sweetheart, honey, and most importantly, my second half.';
       noBtn.style.display = 'none';
