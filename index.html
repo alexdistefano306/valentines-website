@@ -115,7 +115,7 @@
       margin-top: 0.35rem;
       color: #8f375d;
       min-height: 1.2rem;
-      font-size: 0.98rem;
+      font-size: 1.2rem;
       font-weight: 600;
     }
 
@@ -127,16 +127,39 @@
       pointer-events: none;
       z-index: 20;
     }
+
+    /* Hidden button to trigger autoplay */
+    #autoplayTrigger {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #ff4d8d;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(255, 77, 141, 0.4);
+      z-index: 100;
+    }
+
+    #autoplayTrigger.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
   <!-- Intro screen -->
   <div class="intro-screen" id="introScreen">
-    Press SPACE BAR to continue ✨
+    Press SPACE to continue! ✨
   </div>
 
-  <!-- Audio element -->
-  <audio id="backgroundMusic" loop>
+  <!-- Autoplay trigger button -->
+  <button id="autoplayTrigger" class="hidden">Click to Play Music 🎵</button>
+
+  <!-- Audio element with autoplay -->
+  <audio id="backgroundMusic" loop autoplay>
     <source src="your-song.mp3" type="audio/mpeg">
     Your browser does not support the audio element.
   </audio>
@@ -169,9 +192,9 @@
     const photo = document.getElementById('photo');
     const heading = document.getElementById('heading');
     const subtext = document.getElementById('subtext');
+    const autoplayTrigger = document.getElementById('autoplayTrigger');
     const introScreen = document.getElementById('introScreen');
     const mainCard = document.getElementById('mainCard');
-    const bgMusic = document.getElementById('backgroundMusic');
 
     let noClicks = 0;
     let yesScale = 1;
@@ -188,6 +211,7 @@
         mainCard.classList.remove('hidden');
         
         // Start the music
+        const bgMusic = document.getElementById('backgroundMusic');
         bgMusic.play().catch(error => {
           console.log('Could not play music:', error);
         });
@@ -281,7 +305,7 @@
       confettiCanvas.height = window.innerHeight;
     }
 
-    function launchConfetti(durationMs = 2500) {
+    function launchConfetti(durationMs = 5000) {
       sizeConfettiCanvas();
       const colors = ['#ff4d8d', '#ff8fab', '#ffd166', '#7dd3fc', '#ffffff'];
       const pieces = Array.from({ length: 170 }, () => ({
@@ -344,10 +368,48 @@
       noBtn.style.display = 'none';
       yesBtn.textContent = 'YAYYYYYY';
       yesBtn.style.transform = 'scale(1.3)';
-      launchConfetti(2600);
+      launchConfetti(5000);
     });
 
     document.addEventListener('mousemove', dodgeCursor);
+
+    // Auto-play background music on page load
+    const bgMusic = document.getElementById('backgroundMusic');
+    
+    // Try to play immediately when page loads
+    window.addEventListener('load', () => {
+      const playAttempt = bgMusic.play();
+      
+      if (playAttempt !== undefined) {
+        playAttempt.then(() => {
+          // Music started playing successfully
+          console.log('Music playing!');
+        }).catch(error => {
+          // Autoplay was blocked - show the play button
+          console.log('Autoplay blocked, showing play button');
+          autoplayTrigger.classList.remove('hidden');
+        });
+      }
+    });
+
+    // Manual play button click
+    autoplayTrigger.addEventListener('click', () => {
+      bgMusic.play().then(() => {
+        autoplayTrigger.classList.add('hidden');
+      });
+    });
+
+    // Also try playing on any user interaction
+    const tryPlay = () => {
+      if (bgMusic.paused) {
+        bgMusic.play().then(() => {
+          autoplayTrigger.classList.add('hidden');
+        }).catch(() => {});
+      }
+    };
+
+    document.addEventListener('click', tryPlay, { once: true });
+    document.addEventListener('touchstart', tryPlay, { once: true });
   </script>
 </body>
 </html>
