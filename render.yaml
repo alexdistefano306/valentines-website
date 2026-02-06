@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: valentines-website
+    env: python
+    plan: free
+    buildCommand: "echo 'No build step required'"
+    startCommand: "python3 app.py"
