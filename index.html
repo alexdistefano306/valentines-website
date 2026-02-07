@@ -18,23 +18,6 @@
       overflow: hidden;
     }
 
-    .intro-screen {
-      text-align: center;
-      color: #d6336c;
-      font-size: clamp(1.5rem, 4vw, 2.5rem);
-      font-weight: 700;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    .intro-screen.hidden {
-      display: none;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 0.6; }
-      50% { opacity: 1; }
-    }
-
     .card {
       text-align: center;
       background: rgba(255, 255, 255, 0.95);
@@ -43,10 +26,6 @@
       box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
       width: min(92vw, 560px);
       position: relative;
-    }
-
-    .card.hidden {
-      display: none;
     }
 
     .photo {
@@ -91,6 +70,10 @@
       padding: 0.8rem 1.6rem;
       transition: box-shadow 0.2s ease;
       will-change: transform;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      backface-visibility: hidden;
+      transform-origin: center center;
     }
 
     #yesBtn {
@@ -98,6 +81,7 @@
       color: #fff;
       box-shadow: 0 6px 16px rgba(255, 77, 141, 0.35);
       position: relative;
+      z-index: 1;
     }
 
     #noBtn {
@@ -106,6 +90,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
       position: absolute;
       pointer-events: auto;
+      z-index: 2;
     }
 
     .message {
@@ -135,11 +120,6 @@
   </style>
 </head>
 <body>
-  <!-- Intro screen -->
-  <div class="intro-screen" id="introScreen">
-    Press Space to continue! ✨
-  </div>
-
   <!-- Audio element with autoplay -->
   <audio id="backgroundMusic" loop autoplay>
     <source src="your-song.mp3" type="audio/mpeg">
@@ -148,7 +128,7 @@
 
   <canvas id="confettiCanvas" class="confetti-canvas" aria-hidden="true"></canvas>
 
-  <main class="card hidden" id="mainCard">
+  <main class="card">
     <img class="photo" id="photo" src="100_0401.jpeg" alt="A special photo together" />
 
     <h1 id="heading">Olivia, will you be my valentine? 💖</h1>
@@ -175,31 +155,13 @@
     const photo = document.getElementById('photo');
     const heading = document.getElementById('heading');
     const subtext = document.getElementById('subtext');
-    const introScreen = document.getElementById('introScreen');
-    const mainCard = document.getElementById('mainCard');
 
     let noClicks = 0;
     let yesScale = 1;
     let noScale = 1;
     let noOffsetX = 0;
     let noOffsetY = 0;
-    let hasStarted = false;
     let yesClicked = false;
-
-    // Listen for spacebar press to start
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && !hasStarted) {
-        hasStarted = true;
-        introScreen.classList.add('hidden');
-        mainCard.classList.remove('hidden');
-        
-        // Start the music
-        const bgMusic = document.getElementById('backgroundMusic');
-        bgMusic.play().catch(error => {
-          console.log('Could not play music:', error);
-        });
-      }
-    });
 
     function applyNoOffset() {
       noBtn.style.transform = `translate(${noOffsetX}px, ${noOffsetY}px) scale(${noScale})`;
@@ -219,7 +181,7 @@
     }
 
     function dodgeCursor(event) {
-      if (!hasStarted || yesClicked) return;
+      if (yesClicked) return;
       
       const rect = noBtn.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -317,8 +279,8 @@
       function frame(nowTime) {
         confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 
-        // Spawn new confetti every 1.5 seconds to keep it falling
-        if (nowTime - lastSpawn > 1500 && nowTime < endTime) {
+        // Spawn new confetti every 1.3 seconds to keep it falling
+        if (nowTime - lastSpawn > 1300 && nowTime < endTime) {
           allPieces.push(...createConfettiBatch());
           lastSpawn = nowTime;
         }
