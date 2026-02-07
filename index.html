@@ -29,12 +29,12 @@
     }
 
     .photo {
-      width: min(100%, 500px);
-      max-height: 400px;
+      width: min(100%, 420px);
+      max-height: 320px;
       object-fit: cover;
       border-radius: 0.9rem;
       box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-      margin: 0 auto 1rem auto;
+      margin-bottom: 1rem;
       display: none;
     }
 
@@ -47,7 +47,6 @@
     p {
       color: #6c2a46;
       margin-bottom: 1.5rem;
-      font-size: 1.1rem;
     }
 
     .buttons {
@@ -57,8 +56,6 @@
       align-items: center;
       gap: 1rem;
       min-height: 90px;
-      position: relative;
-      margin-bottom: 1.5rem;
     }
 
     button {
@@ -68,31 +65,24 @@
       font-size: 1rem;
       font-weight: 700;
       padding: 0.8rem 1.6rem;
-      transition: box-shadow 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
       will-change: transform;
-      image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
-      text-rendering: optimizeLegibility;
-      -webkit-font-smoothing: subpixel-antialiased;
-      -moz-osx-font-smoothing: auto;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      backface-visibility: hidden;
+      transform-origin: center center;
     }
 
     #yesBtn {
       background: #ff4d8d;
       color: #fff;
       box-shadow: 0 6px 16px rgba(255, 77, 141, 0.35);
-      position: static;
     }
 
     #noBtn {
       background: #f2f2f2;
       color: #444;
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      margin-left: 60px;
-      margin-top: -20px;
     }
 
     .message {
@@ -107,7 +97,7 @@
       margin-top: 0.35rem;
       color: #8f375d;
       min-height: 1.2rem;
-      font-size: 1.2rem;
+      font-size: 0.98rem;
       font-weight: 600;
     }
 
@@ -134,13 +124,12 @@
     <img class="photo" id="photo" src="100_0401.jpeg" alt="A special photo together" />
 
     <h1 id="heading">Olivia, will you be my valentine? 💖</h1>
+    <p id="subtext">You definitely shouldn't try to press no.</p>
 
     <div class="buttons" id="buttonArea">
       <button id="yesBtn">Yes 💘</button>
       <button id="noBtn">No 🙈</button>
     </div>
-
-    <p id="subtext">You definitely shouldn't try to press no.</p>
 
     <div class="message" id="message"></div>
     <div class="submessage" id="submessage"></div>
@@ -163,16 +152,13 @@
     let noScale = 1;
     let noOffsetX = 0;
     let noOffsetY = 0;
-    let yesClicked = false;
 
     function applyNoOffset() {
       noBtn.style.transform = `translate(${noOffsetX}px, ${noOffsetY}px) scale(${noScale})`;
     }
 
     function applyYesScale() {
-      yesBtn.style.transform = `scale3d(${yesScale}, ${yesScale}, 1)`;
-      yesBtn.style.transformOrigin = 'center center';
-      yesBtn.style.willChange = 'transform';
+      yesBtn.style.transform = `scale(${yesScale})`;
     }
 
     function clampOffset() {
@@ -185,8 +171,6 @@
     }
 
     function dodgeCursor(event) {
-      if (yesClicked) return;
-      
       const rect = noBtn.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
@@ -194,16 +178,16 @@
       const dy = centerY - event.clientY;
       const distance = Math.hypot(dx, dy);
 
-      if (distance < 150) {
-        const strength = 25;
+      if (distance < 95) {
+        const strength = 14;
         const nx = dx / (distance || 1);
         const ny = dy / (distance || 1);
         noOffsetX += nx * strength;
         noOffsetY += ny * strength;
         clampOffset();
         
-        // Grow yes button (max 300%) and shrink no button (minimum 50%)
-        yesScale = Math.min(3, yesScale + 0.05);
+        // Grow yes button and shrink no button (minimum 50%)
+        yesScale += 0.05;
         noScale = Math.max(0.5, noScale - 0.03);
         
         applyNoOffset();
@@ -212,33 +196,21 @@
     }
 
     noBtn.addEventListener('mouseenter', () => {
-      if (yesClicked) return;
-      
-      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 30;
-      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 25;
+      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 12;
+      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 8;
       clampOffset();
       
-      // Grow yes button (max 300%) and shrink no button (minimum 50%)
-      yesScale = Math.min(3, yesScale + 0.1);
+      // Grow yes button and shrink no button (minimum 50%)
+      yesScale += 0.1;
       noScale = Math.max(0.5, noScale - 0.05);
       
       applyNoOffset();
       applyYesScale();
     });
 
-    noBtn.addEventListener('click', (e) => {
-      if (yesClicked) return;
-      
-      e.preventDefault();
-      e.stopPropagation();
+    noBtn.addEventListener('click', () => {
       noClicks += 1;
-      
-      // Jump away immediately on click
-      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 50;
-      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 40;
-      clampOffset();
-      
-      yesScale = Math.min(3, yesScale + 0.2);
+      yesScale += 0.2;
       noScale = Math.max(0.5, noScale - 0.08);
       applyYesScale();
       applyNoOffset();
@@ -257,40 +229,27 @@
       confettiCanvas.height = window.innerHeight;
     }
 
-    function launchConfetti(durationMs = 5000) {
+    function launchConfetti(durationMs = 2500) {
       sizeConfettiCanvas();
       const colors = ['#ff4d8d', '#ff8fab', '#ffd166', '#7dd3fc', '#ffffff'];
-      
-      function createConfettiBatch() {
-        return Array.from({ length: 170 }, () => ({
-          x: Math.random() * confettiCanvas.width,
-          y: -20 - Math.random() * 50,
-          w: 6 + Math.random() * 8,
-          h: 8 + Math.random() * 10,
-          vx: -2 + Math.random() * 4,
-          vy: 2 + Math.random() * 4,
-          rot: Math.random() * Math.PI * 2,
-          vr: -0.12 + Math.random() * 0.24,
-          color: colors[Math.floor(Math.random() * colors.length)],
-        }));
-      }
-      
-      let allPieces = createConfettiBatch();
-      const startTime = performance.now();
-      const endTime = startTime + durationMs;
-      let lastSpawn = startTime;
+      const pieces = Array.from({ length: 170 }, () => ({
+        x: Math.random() * confettiCanvas.width,
+        y: -20 - Math.random() * confettiCanvas.height * 0.3,
+        w: 6 + Math.random() * 8,
+        h: 8 + Math.random() * 10,
+        vx: -2 + Math.random() * 4,
+        vy: 2 + Math.random() * 4,
+        rot: Math.random() * Math.PI * 2,
+        vr: -0.12 + Math.random() * 0.24,
+        color: colors[Math.floor(Math.random() * colors.length)],
+      }));
+
+      const endTime = performance.now() + durationMs;
 
       function frame(nowTime) {
         confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 
-        // Spawn new confetti every 1.3 seconds to keep it falling
-        if (nowTime - lastSpawn > 1300 && nowTime < endTime) {
-          allPieces.push(...createConfettiBatch());
-          lastSpawn = nowTime;
-        }
-
-        for (let i = allPieces.length - 1; i >= 0; i--) {
-          const p = allPieces[i];
+        for (const p of pieces) {
           p.x += p.vx;
           p.y += p.vy;
           p.vy += 0.045;
@@ -303,13 +262,13 @@
           confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
           confettiCtx.restore();
 
-          // Remove pieces that fall off screen
-          if (p.y > confettiCanvas.height + 50) {
-            allPieces.splice(i, 1);
+          if (p.y > confettiCanvas.height + 25) {
+            p.y = -15;
+            p.vy = 1.8 + Math.random() * 3;
           }
         }
 
-        if (nowTime < endTime || allPieces.length > 0) {
+        if (nowTime < endTime) {
           requestAnimationFrame(frame);
         } else {
           confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
@@ -323,19 +282,17 @@
     window.addEventListener('resize', sizeConfettiCanvas);
 
     yesBtn.addEventListener('click', () => {
-      yesClicked = true;
-      
       // Hide text and show photo
       heading.style.display = 'none';
       subtext.style.display = 'none';
       photo.style.display = 'block';
       
       message.textContent = 'YAY! Best Valentine ever! 💞';
-      submessage.textContent = 'I love you so much my baby, booger, boogs, sweetheart, honey, and most importantly, my second half! ❤️';
+      submessage.textContent = 'I love you so much my baby, booger, boogs, sweetheart, honey, and most importantly, my second half.';
       noBtn.style.display = 'none';
       yesBtn.textContent = 'YAYYYYYY';
       yesBtn.style.transform = 'scale(1.3)';
-      launchConfetti(5000);
+      launchConfetti(2600);
     });
 
     document.addEventListener('mousemove', dodgeCursor);
