@@ -76,7 +76,6 @@
       align-items: center;
       gap: 1rem;
       min-height: 90px;
-      position: relative;
     }
 
     button {
@@ -86,7 +85,7 @@
       font-size: 1rem;
       font-weight: 700;
       padding: 0.8rem 1.6rem;
-      transition: box-shadow 0.2s ease;
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
       will-change: transform;
     }
 
@@ -127,36 +126,13 @@
       pointer-events: none;
       z-index: 20;
     }
-
-    /* Hidden button to trigger autoplay */
-    #autoplayTrigger {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #ff4d8d;
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 999px;
-      cursor: pointer;
-      font-weight: 700;
-      box-shadow: 0 4px 12px rgba(255, 77, 141, 0.4);
-      z-index: 100;
-    }
-
-    #autoplayTrigger.hidden {
-      display: none;
-    }
   </style>
 </head>
 <body>
   <!-- Intro screen -->
   <div class="intro-screen" id="introScreen">
-    Press SPACE to continue! ✨
+    Press Space to continue! ✨
   </div>
-
-  <!-- Autoplay trigger button -->
-  <button id="autoplayTrigger" class="hidden">Click to Play Music 🎵</button>
 
   <!-- Audio element with autoplay -->
   <audio id="backgroundMusic" loop autoplay>
@@ -192,7 +168,6 @@
     const photo = document.getElementById('photo');
     const heading = document.getElementById('heading');
     const subtext = document.getElementById('subtext');
-    const autoplayTrigger = document.getElementById('autoplayTrigger');
     const introScreen = document.getElementById('introScreen');
     const mainCard = document.getElementById('mainCard');
 
@@ -263,10 +238,8 @@
     }
 
     noBtn.addEventListener('mouseenter', () => {
-      const randomX = (Math.random() > 0.5 ? 1 : -1) * 20;
-      const randomY = (Math.random() > 0.5 ? 1 : -1) * 15;
-      noOffsetX += randomX;
-      noOffsetY += randomY;
+      noOffsetX += (Math.random() > 0.5 ? 1 : -1) * 20;
+      noOffsetY += (Math.random() > 0.5 ? 1 : -1) * 15;
       clampOffset();
       
       // Grow yes button (max 300%) and shrink no button (minimum 50%)
@@ -376,40 +349,23 @@
     // Auto-play background music on page load
     const bgMusic = document.getElementById('backgroundMusic');
     
-    // Try to play immediately when page loads
-    window.addEventListener('load', () => {
-      const playAttempt = bgMusic.play();
+    // For private sites, we can be more aggressive with autoplay
+    // Try to play immediately
+    bgMusic.play().catch(error => {
+      // If autoplay fails, play on first interaction
+      console.log('Autoplay prevented. Will play on first interaction.');
       
-      if (playAttempt !== undefined) {
-        playAttempt.then(() => {
-          // Music started playing successfully
-          console.log('Music playing!');
-        }).catch(error => {
-          // Autoplay was blocked - show the play button
-          console.log('Autoplay blocked, showing play button');
-          autoplayTrigger.classList.remove('hidden');
-        });
-      }
+      const playOnInteraction = () => {
+        bgMusic.play();
+        document.removeEventListener('click', playOnInteraction);
+        document.removeEventListener('touchstart', playOnInteraction);
+        document.removeEventListener('keydown', playOnInteraction);
+      };
+      
+      document.addEventListener('click', playOnInteraction);
+      document.addEventListener('touchstart', playOnInteraction);
+      document.addEventListener('keydown', playOnInteraction);
     });
-
-    // Manual play button click
-    autoplayTrigger.addEventListener('click', () => {
-      bgMusic.play().then(() => {
-        autoplayTrigger.classList.add('hidden');
-      });
-    });
-
-    // Also try playing on any user interaction
-    const tryPlay = () => {
-      if (bgMusic.paused) {
-        bgMusic.play().then(() => {
-          autoplayTrigger.classList.add('hidden');
-        }).catch(() => {});
-      }
-    };
-
-    document.addEventListener('click', tryPlay, { once: true });
-    document.addEventListener('touchstart', tryPlay, { once: true });
   </script>
 </body>
 </html>
